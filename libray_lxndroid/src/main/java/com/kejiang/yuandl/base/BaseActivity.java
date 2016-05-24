@@ -70,7 +70,7 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         AppManager.getAppManager().addActivity(this);
-        setImmersionStatus();
+//        setImmersionStatus();
         setupViews();
         context = this;
         initTitleBar();
@@ -372,216 +372,216 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
     protected void startActivity(Class c) {
         startActivity(new Intent(context, c));
     }
-
-    /**
-     * 异步网络请求类
-     *
-     * @param requestParams
-     */
-    protected void ajax(RequestParams requestParams) {
-        if (!CheckNetwork.isNetworkAvailable(context)) {
-            showToast("网络不可用，请检查网络连接！");
-            return;
-        }
-        if (loadingDialog == null) {
-            loadingDialog = new LoadingDialog(context);
-        }
-        if (requestParams != null) {
-            String uri = requestParams.getUri();
-            if (!uri.isEmpty()) {
-                String[] split = uri.split("/");
-//                Logger.d("split=" + Arrays.toString(split));
-
-                String method = null;
-                try {
-                    method = split[split.length - 1].substring(0, split[split.length - 1].indexOf("."));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Logger.d("请检查服务器地址后面是否含有.html");
-                }
-                String mode = split[split.length - 2];
-                String sign = MD5.md5(mode + method);
-                requestParams.addBodyParameter("sign", sign);
-            }
-
-        }
-        Logger.d("url=" + requestParams.getUri() + "\nrequestParams=" + requestParams.getStringParams().toString());
-        List<KeyValue> params = requestParams.getStringParams();
-        for (KeyValue keyValue : params) {
-            if (keyValue.key.contains(":")) {
-                throw new RuntimeException("参数异常！");
-            }
-        }
-        //                    jsonBean = JSON.parseObject(result, JsonBean.class);
-        cancelable = x.http().post(requestParams, new Callback.ProgressCallback<String>() {
-
-            @Override
-            public void onWaiting() {
-            }
-
-            @Override
-
-            public void onStarted() {
-                netOnStart();
-            }
-
-            @Override
-            public void onLoading(long total, long current, boolean isDownloading) {
-                netOnLoading(total, current, isDownloading);
-            }
-
-            @Override
-            public void onSuccess(String result) {
-
-                Logger.json(result);
-                JsonBean jsonBean = null;
-                try {
-//                    jsonBean = JSON.parseObject(result, JsonBean.class);
-                    jsonBean = jsonParse(result);
-                    if (jsonBean.getMsg() != null && !jsonBean.getMsg().isEmpty()) {
-                        showToast(jsonBean.getMsg());
-                    }
-                    if (jsonBean.getCode() == 200) {
-                        Map<String, Object> data = new ArrayMap<String, Object>();
-                        if (null != jsonBean.getData() && jsonBean.getData().size() > 0) {
-                            data = jsonBean.getData();
-                        }
-                        netOnSuccess(data);
-                    } else {
-
-                        netOnOtherStates(jsonBean.getCode(), jsonBean.getMsg());
-                    }
-                } catch (Exception e) {
-                    if (loadingDialog != null && loadingDialog.isShowing()) {
-                        loadingDialog.dismiss();
-                    }
-                    Logger.d(result);
-                    showToast("服务器异常！");
-                    e.printStackTrace();
-                } finally {
-                }
-            }
-
-            @Override
-            public void onError(Throwable ex, boolean isOnCallback) {
-                netOnFailure(ex);
-
-            }
-
-            @Override
-            public void onCancelled(CancelledException cex) {
-                Logger.d("用户取消了访问网络....");
-                netOnCancelled();
-            }
-
-            @Override
-            public void onFinished() {
-                netOnFinish();
-            }
-
-        });
-    }
-
-
-    private JsonBean jsonParse(String json) throws JSONException {
-        ArrayMap<String,Object> arrayMap= JSON.parseObject(json,new TypeReference<ArrayMap<String,Object>>(){
-        }.getType());
-        JsonBean jsonBean = new JsonBean();
-        if (arrayMap.containsKey("data")) {
-            Object data = arrayMap.get("data");
-            System.out.println("data.getClass().getName()=" + data.getClass().getName());
-            ArrayMap<String,Object> rrData = null;
-            if (data instanceof String) {
-                System.out.println("data instanceof String");
-                rrData = new ArrayMap<String,Object>();
-                rrData.put("data", data.toString());
-            } else if (data instanceof JSONArray) {
-                System.out.println("data instanceof JSONArray");
-                rrData = new ArrayMap<String,Object>();
-                rrData.put("data", data);
-            } else if (data instanceof com.alibaba.fastjson.JSONObject) {
-                System.out.println("data instanceof JSONObject");
-                rrData = JSON.parseObject(data.toString(),new TypeReference<ArrayMap<String,Object>>(){
-                }.getType());
-            }
-            jsonBean.setData(rrData);
-        }
-        jsonBean.setCode(Integer.valueOf(arrayMap.get("code").toString()));
-        jsonBean.setMsg(Tools.getValue(arrayMap, "msg"));
-
-        return jsonBean;
-    }
-
-
-    /**
-     * 开始访问网络
-     */
-    public void netOnStart() {
-        loadingDialog.show("正在获取数据...");
-    }
-
-    /**
-     * 访问网络的进程
-     */
-    public void netOnLoading(long total, long current, boolean isUploading) {
-    }
-
-    /**
-     * 访问网络成功
-     */
-    public void netOnSuccess(Map<String, Object> data) {
-        if (loadingDialog != null) {
-            loadingDialog.dismiss();
-        }
-    }
-
-    /**
-     * 访问网络成功的其他状态
-     */
-    public void netOnOtherStates(int code, String msg) {
-        if (loadingDialog != null) {
-            loadingDialog.dismiss();
-        }
-    }
-
-    /**
-     * 访问网络结束
-     */
-    public void netOnFinish() {
-        loadingDialog.dismiss();
-    }
-
-    /**
-     * 访问网络失败
-     */
-    public void netOnFailure(Throwable ex) {
-        if (loadingDialog != null) {
-            loadingDialog.dismiss();
-        }
-        Logger.d(ex.getMessage());
-        if (ex instanceof HttpException) { // 网络错误
-            HttpException httpEx = (HttpException) ex;
-            int responseCode = httpEx.getCode();
-            String responseMsg = httpEx.getMessage();
-            String errorResult = httpEx.getResult();
-            Toast.makeText(x.app(), "网络错误：" + ex.getMessage(), Toast.LENGTH_LONG).show();
-            // ...
-        } else { // 其他错误
-            Toast.makeText(context, "连接服务器失败，请稍后再试！ex=" + ex.getMessage(), Toast.LENGTH_SHORT).show();
-            // ...
-        }
-
-
-    }
-
-    /**
-     * 取消访问网络
-     */
-    public void netOnCancelled() {
-        if (loadingDialog != null) {
-            loadingDialog.dismiss();
-        }
-    }
+//
+//    /**
+//     * 异步网络请求类
+//     *
+//     * @param requestParams
+//     */
+//    protected void ajax(RequestParams requestParams) {
+//        if (!CheckNetwork.isNetworkAvailable(context)) {
+//            showToast("网络不可用，请检查网络连接！");
+//            return;
+//        }
+//        if (loadingDialog == null) {
+//            loadingDialog = new LoadingDialog(context);
+//        }
+//        if (requestParams != null) {
+//            String uri = requestParams.getUri();
+//            if (!uri.isEmpty()) {
+//                String[] split = uri.split("/");
+////                Logger.d("split=" + Arrays.toString(split));
+//
+//                String method = null;
+//                try {
+//                    method = split[split.length - 1].substring(0, split[split.length - 1].indexOf("."));
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    Logger.d("请检查服务器地址后面是否含有.html");
+//                }
+//                String mode = split[split.length - 2];
+//                String sign = MD5.md5(mode + method);
+//                requestParams.addBodyParameter("sign", sign);
+//            }
+//
+//        }
+//        Logger.d("url=" + requestParams.getUri() + "\nrequestParams=" + requestParams.getStringParams().toString());
+//        List<KeyValue> params = requestParams.getStringParams();
+//        for (KeyValue keyValue : params) {
+//            if (keyValue.key.contains(":")) {
+//                throw new RuntimeException("参数异常！");
+//            }
+//        }
+//        //                    jsonBean = JSON.parseObject(result, JsonBean.class);
+//        cancelable = x.http().post(requestParams, new Callback.ProgressCallback<String>() {
+//
+//            @Override
+//            public void onWaiting() {
+//            }
+//
+//            @Override
+//
+//            public void onStarted() {
+//                netOnStart();
+//            }
+//
+//            @Override
+//            public void onLoading(long total, long current, boolean isDownloading) {
+//                netOnLoading(total, current, isDownloading);
+//            }
+//
+//            @Override
+//            public void onSuccess(String result) {
+//
+//                Logger.json(result);
+//                JsonBean jsonBean = null;
+//                try {
+////                    jsonBean = JSON.parseObject(result, JsonBean.class);
+//                    jsonBean = jsonParse(result);
+//                    if (jsonBean.getMsg() != null && !jsonBean.getMsg().isEmpty()) {
+//                        showToast(jsonBean.getMsg());
+//                    }
+//                    if (jsonBean.getCode() == 200) {
+//                        Map<String, Object> data = new ArrayMap<String, Object>();
+//                        if (null != jsonBean.getData() && jsonBean.getData().size() > 0) {
+//                            data = jsonBean.getData();
+//                        }
+//                        netOnSuccess(data);
+//                    } else {
+//
+//                        netOnOtherStates(jsonBean.getCode(), jsonBean.getMsg());
+//                    }
+//                } catch (Exception e) {
+//                    if (loadingDialog != null && loadingDialog.isShowing()) {
+//                        loadingDialog.dismiss();
+//                    }
+//                    Logger.d(result);
+//                    showToast("服务器异常！");
+//                    e.printStackTrace();
+//                } finally {
+//                }
+//            }
+//
+//            @Override
+//            public void onError(Throwable ex, boolean isOnCallback) {
+//                netOnFailure(ex);
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(CancelledException cex) {
+//                Logger.d("用户取消了访问网络....");
+//                netOnCancelled();
+//            }
+//
+//            @Override
+//            public void onFinished() {
+//                netOnFinish();
+//            }
+//
+//        });
+//    }
+//
+//
+//    private JsonBean jsonParse(String json) throws JSONException {
+//        ArrayMap<String,Object> arrayMap= JSON.parseObject(json,new TypeReference<ArrayMap<String,Object>>(){
+//        }.getType());
+//        JsonBean jsonBean = new JsonBean();
+//        if (arrayMap.containsKey("data")) {
+//            Object data = arrayMap.get("data");
+//            System.out.println("data.getClass().getName()=" + data.getClass().getName());
+//            ArrayMap<String,Object> rrData = null;
+//            if (data instanceof String) {
+//                System.out.println("data instanceof String");
+//                rrData = new ArrayMap<String,Object>();
+//                rrData.put("data", data.toString());
+//            } else if (data instanceof JSONArray) {
+//                System.out.println("data instanceof JSONArray");
+//                rrData = new ArrayMap<String,Object>();
+//                rrData.put("data", data);
+//            } else if (data instanceof com.alibaba.fastjson.JSONObject) {
+//                System.out.println("data instanceof JSONObject");
+//                rrData = JSON.parseObject(data.toString(),new TypeReference<ArrayMap<String,Object>>(){
+//                }.getType());
+//            }
+//            jsonBean.setData(rrData);
+//        }
+//        jsonBean.setCode(Integer.valueOf(arrayMap.get("code").toString()));
+//        jsonBean.setMsg(Tools.getValue(arrayMap, "msg"));
+//
+//        return jsonBean;
+//    }
+//
+//
+//    /**
+//     * 开始访问网络
+//     */
+//    public void netOnStart() {
+//        loadingDialog.show("正在获取数据...");
+//    }
+//
+//    /**
+//     * 访问网络的进程
+//     */
+//    public void netOnLoading(long total, long current, boolean isUploading) {
+//    }
+//
+//    /**
+//     * 访问网络成功
+//     */
+//    public void netOnSuccess(Map<String, Object> data) {
+//        if (loadingDialog != null) {
+//            loadingDialog.dismiss();
+//        }
+//    }
+//
+//    /**
+//     * 访问网络成功的其他状态
+//     */
+//    public void netOnOtherStates(int code, String msg) {
+//        if (loadingDialog != null) {
+//            loadingDialog.dismiss();
+//        }
+//    }
+//
+//    /**
+//     * 访问网络结束
+//     */
+//    public void netOnFinish() {
+//        loadingDialog.dismiss();
+//    }
+//
+//    /**
+//     * 访问网络失败
+//     */
+//    public void netOnFailure(Throwable ex) {
+//        if (loadingDialog != null) {
+//            loadingDialog.dismiss();
+//        }
+//        Logger.d(ex.getMessage());
+//        if (ex instanceof HttpException) { // 网络错误
+//            HttpException httpEx = (HttpException) ex;
+//            int responseCode = httpEx.getCode();
+//            String responseMsg = httpEx.getMessage();
+//            String errorResult = httpEx.getResult();
+//            Toast.makeText(x.app(), "网络错误：" + ex.getMessage(), Toast.LENGTH_LONG).show();
+//            // ...
+//        } else { // 其他错误
+//            Toast.makeText(context, "连接服务器失败，请稍后再试！ex=" + ex.getMessage(), Toast.LENGTH_SHORT).show();
+//            // ...
+//        }
+//
+//
+//    }
+//
+//    /**
+//     * 取消访问网络
+//     */
+//    public void netOnCancelled() {
+//        if (loadingDialog != null) {
+//            loadingDialog.dismiss();
+//        }
+//    }
 
     @Override
     public void onBackPressed() {

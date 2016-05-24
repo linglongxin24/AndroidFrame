@@ -3,9 +3,8 @@
     style="@style/immersion_status"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#af895b"
+    android:background="#FFFFFF"
     android:id="@+id/llRoot"
-    android:fitsSystemWindows="true"
     android:orientation="vertical">
 
     <!-- Title -->
