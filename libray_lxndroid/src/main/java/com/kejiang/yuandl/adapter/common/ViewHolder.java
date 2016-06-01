@@ -20,6 +20,8 @@ import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.zhy.autolayout.utils.AutoUtils;
+
 public class ViewHolder extends RecyclerView.ViewHolder {
     private SparseArray<View> mViews;
     private int mPosition;
@@ -37,6 +39,7 @@ public class ViewHolder extends RecyclerView.ViewHolder {
         mConvertView = itemView;
         mPosition = position;
         mViews = new SparseArray<View>();
+        AutoUtils.autoSize(mConvertView);
         mConvertView.setTag(this);
 
     }

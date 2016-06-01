@@ -31,6 +31,9 @@ public class AppManager {
         return instance;
     }
 
+    public Stack<Activity> getAllActivitys() {
+        return activityStack;
+    }
     /**
      * 栈中是否为空
      *
@@ -68,6 +71,17 @@ public class AppManager {
             return null;
         }
         return activityStack.get(activityStack.size() - 1);
+    }
+    /**
+     * 获取前一个activity，便于返回
+     *
+     * @return
+     */
+    public Activity previousActivity() {
+        if (activityStack.size() < 2) {
+            return null;
+        }
+        return activityStack.get(activityStack.size() - 2);
     }
 
     /**
@@ -158,6 +172,7 @@ public class AppManager {
             }
         }
     }
+
     /**
      * 结束所有Activity保留登录界面
      */
@@ -167,13 +182,14 @@ public class AppManager {
         for (int i = 0, size = activityList.size(); i < size; i++) {
             Activity activity = activityList.get(i);
             if (null != activityList.get(i)) {
-                if(!activityList.get(i).getClass().getSimpleName().equals("UserSetActivity")) {
+                if (!activityList.get(i).getClass().getSimpleName().equals("UserSetActivity")) {
                     activityList.get(i).finish();
                     activityStack.remove(activity);
                 }
             }
         }
     }
+
     /**
      * 退出应用程序
      */
@@ -182,7 +198,7 @@ public class AppManager {
             finishAllActivity();
 //            MyApplication.getInstance().unregisterReceiver();
             /*
-			 * ActivityManager activityMgr= (ActivityManager)
+             * ActivityManager activityMgr= (ActivityManager)
 			 * context.getSystemService(Context.ACTIVITY_SERVICE);
 			 * activityMgr.restartPackage(context.getPackageName());
 			 */

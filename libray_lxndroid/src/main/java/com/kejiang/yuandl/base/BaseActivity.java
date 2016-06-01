@@ -12,6 +12,7 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
@@ -240,7 +241,7 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
      * 提供是否显示提交按钮
      *
      * @param title 文字
-     * @param show         true则显示
+     * @param show  true则显示
      */
     protected void showForwardView(CharSequence title, boolean show) {
         if (mForwardButton != null) {
@@ -609,11 +610,22 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
         listView.setEmptyView(emptyView);
     }
 
+    protected void setEmptyView(ListView listView, String text) {
+        TextView emptyView = new TextView(context);
+        emptyView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        emptyView.setText(text);
+        emptyView.setGravity(Gravity.CENTER);
+        emptyView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        emptyView.setVisibility(View.GONE);
+        ((ViewGroup) listView.getParent()).addView(emptyView);
+        listView.setEmptyView(emptyView);
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         mContentLayout.removeAllViews();
-        mContentLayout=null;
+        mContentLayout = null;
         AppManager.getAppManager().finishActivity(this);
     }
 

@@ -1,4 +1,4 @@
-package com.kykj.inspection.adapter;
+package com.kejiang.yuandl.adapter;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -18,7 +18,7 @@ public class FragmentTabAdapter implements OnCheckedChangeListener {
     private FragmentActivity fragmentActivity; // Fragment所属的Activity
     private int fragmentContentId; // Activity中所要被替换的区域的id
 
-    private int currentTab =0;// 当前Tab页面索引
+    private int currentTab = 0;// 当前Tab页面索引
 
     private OnRgsExtraCheckedChangedListener onRgsExtraCheckedChangedListener; // 用于让调用者在切换tab时候增加新的功能
 
@@ -32,8 +32,8 @@ public class FragmentTabAdapter implements OnCheckedChangeListener {
         FragmentTransaction ft = fragmentActivity.getSupportFragmentManager()
                 .beginTransaction();
         ft.add(fragmentContentId, fragments.get(currentTab));
-        ft.commit();
-        if(rg!=null){
+        ft.commitAllowingStateLoss();
+        if (rg != null) {
             rg.setOnCheckedChangeListener(this);
         }
 
@@ -46,18 +46,21 @@ public class FragmentTabAdapter implements OnCheckedChangeListener {
             if (rg.getChildAt(i).getId() == checkedId) {
                 Fragment fragment = fragments.get(i);
                 FragmentTransaction ft = obtainFragmentTransaction(i);
-            // getCurrentFragment().onPause(); // 暂停当前tab
+//             getCurrentFragment().onPause(); // 暂停当前tab
                 //getCurrentFragment().onStop(); // 暂停当前tab
 
                 if (fragment.isAdded()) {
-                // fragment.onStart(); // 启动目标tab的onStart()
-                    currentTab=i;
-                    fragment.onResume(); // 启动目标tab的onResume()
+                    // fragment.onStart(); // 启动目标tab的onStart()
+                    currentTab = i;
+                    if (!fragment.isResumed()) {
+
+                        fragment.onResume(); // 启动目标tab的onResume()
+                    }
                 } else {
                     ft.add(fragmentContentId, fragment);
                 }
                 showTab(i); // 显示目标tab
-                ft.commit();
+                ft. commitAllowingStateLoss();
 
                 // 如果设置了切换tab额外功能功能接口
                 if (null != onRgsExtraCheckedChangedListener) {
@@ -85,7 +88,7 @@ public class FragmentTabAdapter implements OnCheckedChangeListener {
             } else {
                 ft.hide(fragment);
             }
-            ft.commit();
+            ft.commitAllowingStateLoss();
         }
         currentTab = idx; // 更新目标tab为当前tab
     }

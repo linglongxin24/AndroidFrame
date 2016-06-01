@@ -1,6 +1,8 @@
 package com.kejiang.yuandl.view;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
@@ -52,9 +54,18 @@ public class MyGallery extends Gallery implements OnItemSelectedListener {
     private final Timer timer = new Timer();
     private final TimerTask task = new TimerTask() {
         public void run() {
-            mHandler.sendEmptyMessage(timerAnimation);
+            if (autoPlay) {
+                mHandler.sendEmptyMessage(timerAnimation);
+            } else {
+                timer.cancel();
+            }
         }
     };
+    private boolean autoPlay = true;
+
+    public void setAutoPlay(boolean autoPlay) {
+        this.autoPlay = autoPlay;
+    }
 
     public MyGallery(Context paramContext) {
         super(paramContext);
@@ -98,6 +109,7 @@ public class MyGallery extends Gallery implements OnItemSelectedListener {
 
     private int count = 0;
     private LinearLayout ll_focus_indicator_container;
+
     public void init(int count, LinearLayout ll_focus_indicator_container) {
         this.count = count;
         this.ll_focus_indicator_container = ll_focus_indicator_container;
@@ -107,7 +119,7 @@ public class MyGallery extends Gallery implements OnItemSelectedListener {
 
     private void InitFocusIndicatorContainer() {
         ll_focus_indicator_container.removeAllViews();
-        if(count<=1){
+        if (count <= 1) {
             return;
         }
         for (int i = 0; i < count; i++) {
@@ -116,10 +128,11 @@ public class MyGallery extends Gallery implements OnItemSelectedListener {
             ImageView.ScaleType localScaleType = ImageView.ScaleType.FIT_XY;
             localImageView.setScaleType(localScaleType);
             LinearLayout.LayoutParams localLayoutParams = new LinearLayout.LayoutParams(
-                    24, 24);
+                    155, 11);
+            localLayoutParams.weight = 1;
             localImageView.setLayoutParams(localLayoutParams);
-            localImageView.setPadding(5, 5, 5, 5);
-            localImageView.setImageResource(R.drawable.indicator_normal);
+            localImageView.setPadding(0, 0, 0, 0);
+            localImageView.setImageDrawable(new ColorDrawable(Color.TRANSPARENT));
             ll_focus_indicator_container.addView(localImageView);
         }
     }
@@ -132,25 +145,24 @@ public class MyGallery extends Gallery implements OnItemSelectedListener {
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int selIndex, long l) {
         //修改上一次选中项的背景
-        if(count==0){
+        if (count == 0) {
             return;
         }
-        selIndex = selIndex %count;
+        selIndex = selIndex % count;
 
         ImageView preSelImg = (ImageView) ll_focus_indicator_container
                 .findViewById(preSelImgIndex);
-        if(preSelImg==null){
+        if (preSelImg == null) {
             return;
         }
-        preSelImg.setImageDrawable(getContext()
-                .getResources().getDrawable(R.drawable.indicator_normal));
+        preSelImg.setImageDrawable(new ColorDrawable(Color.TRANSPARENT));
         //修改当前选中项的背景
         ImageView curSelImg = (ImageView) ll_focus_indicator_container
                 .findViewById(selIndex);
         curSelImg
                 .setImageDrawable(getContext()
                         .getResources().getDrawable(
-                                R.drawable.indicator_focus));
+                                R.drawable.dots_focus));
         preSelImgIndex = selIndex;
     }
 

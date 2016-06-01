@@ -12,6 +12,7 @@
     <include layout="@layout/public_titlebar" />
 
     <FrameLayout
+        android:background="#eeeeee"
         android:id="@+id/layout_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
