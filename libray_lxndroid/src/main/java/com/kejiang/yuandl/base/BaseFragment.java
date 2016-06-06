@@ -368,6 +368,16 @@ public class BaseFragment extends Fragment  {
         listView.setVisibility(View.VISIBLE);
     }
 
+    protected void setEmptyView(ListView listView, String text) {
+        TextView emptyView = new TextView(getContext());
+        emptyView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        emptyView.setText(text);
+        emptyView.setGravity(Gravity.CENTER);
+        emptyView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        emptyView.setVisibility(View.GONE);
+        ((ViewGroup) listView.getParent()).addView(emptyView);
+        listView.setEmptyView(emptyView);
+    }
     @Override
     public void onDestroy() {
         super.onDestroy();
