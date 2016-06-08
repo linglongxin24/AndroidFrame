@@ -148,7 +148,6 @@ public class FragmentTabAdapter implements OnCheckedChangeListener {
      */
     public static class OnRgsExtraCheckedChangedListener {
         public void needLogin(){
-
         }
         public void OnRgsExtraCheckedChanged(RadioGroup radioGroup,
                                              int checkedId, int index) {
