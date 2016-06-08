@@ -3,6 +3,7 @@ package com.kejiang.yuandl.adapter;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 
@@ -40,35 +41,54 @@ public class FragmentTabAdapter implements OnCheckedChangeListener {
 
     }
 
+    private boolean isLogin = true;
+
+    public void setLogin(boolean isLogin) {
+        this.isLogin = isLogin;
+    }
+
     @Override
     public void onCheckedChanged(RadioGroup radioGroup, int checkedId) {
-        for (int i = 0; i < rg.getChildCount(); i++) {
-            if (rg.getChildAt(i).getId() == checkedId) {
-                Fragment fragment = fragments.get(i);
-                FragmentTransaction ft = obtainFragmentTransaction(i);
-//             getCurrentFragment().onPause(); // 暂停当前tab
-                //getCurrentFragment().onStop(); // 暂停当前tab
-
-                if (fragment.isAdded()) {
-                    // fragment.onStart(); // 启动目标tab的onStart()
-                    currentTab = i;
-                    if (!fragment.isResumed()) {
-
-                        fragment.onResume(); // 启动目标tab的onResume()
-                    }
-                } else {
-                    ft.add(fragmentContentId, fragment);
-                }
-                showTab(i); // 显示目标tab
-                ft. commitAllowingStateLoss();
-
-                // 如果设置了切换tab额外功能功能接口
-                if (null != onRgsExtraCheckedChangedListener) {
-                    onRgsExtraCheckedChangedListener.OnRgsExtraCheckedChanged(
-                            radioGroup, checkedId, i);
-                }
-
+        if(!isLogin){
+            ((RadioButton)radioGroup.getChildAt(0)).setChecked(true);
+            // 如果设置了切换tab额外功能功能接口
+            if (null != onRgsExtraCheckedChangedListener) {
+                onRgsExtraCheckedChangedListener.needLogin();
             }
+            return;
+        }
+
+        try {
+            for (int i = 0; i < rg.getChildCount(); i++) {
+                if (rg.getChildAt(i).getId() == checkedId) {
+                    Fragment fragment = fragments.get(i);
+                    FragmentTransaction ft = obtainFragmentTransaction(i);
+                    //             getCurrentFragment().onPause(); // 暂停当前tab
+                    //getCurrentFragment().onStop(); // 暂停当前tab
+
+                    if (fragment.isAdded()) {
+                        // fragment.onStart(); // 启动目标tab的onStart()
+                        currentTab = i;
+                        if (!fragment.isResumed()) {
+
+                            fragment.onResume(); // 启动目标tab的onResume()
+                        }
+                    } else {
+                        ft.add(fragmentContentId, fragment);
+                    }
+                    showTab(i); // 显示目标tab
+                    ft.commitAllowingStateLoss();
+
+                    // 如果设置了切换tab额外功能功能接口
+                    if (null != onRgsExtraCheckedChangedListener) {
+                        onRgsExtraCheckedChangedListener.OnRgsExtraCheckedChanged(
+                                radioGroup, checkedId, i);
+                    }
+
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
     }
@@ -127,6 +147,9 @@ public class FragmentTabAdapter implements OnCheckedChangeListener {
      * 切换tab额外功能功能接口
      */
     public static class OnRgsExtraCheckedChangedListener {
+        public void needLogin(){
+
+        }
         public void OnRgsExtraCheckedChanged(RadioGroup radioGroup,
                                              int checkedId, int index) {
 

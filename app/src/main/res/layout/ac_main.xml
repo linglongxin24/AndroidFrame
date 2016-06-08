@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -7,10 +8,25 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin">
+
+    <com.kejiang.yuandl.view.RatingBar
+        android:background="#FFFFFF"
+        android:id="@+id/rb"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        app:starCount="5"
+        app:starEmpty="@mipmap/star_grey"
+        app:starFill="@mipmap/star_yellow"
+        app:starHalf="@mipmap/star_half_yellow"
+        app:starImageSize="20dp"
+        app:starStep="4.5"></com.kejiang.yuandl.view.RatingBar>
+
     <com.ldd.pullview.AbPullToRefreshView
-        android:layout_width="match_parent"
         android:id="@+id/pr"
-        android:layout_height="match_parent">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/rb">
 
         <ListView
             android:id="@+id/listView"

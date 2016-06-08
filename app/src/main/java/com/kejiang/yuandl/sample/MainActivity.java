@@ -5,19 +5,23 @@ import android.widget.ListView;
 import com.kejiang.yuandl.adapter.common.ViewHolder;
 import com.kejiang.yuandl.adapter.common.abslistview.CommonAdapter;
 import com.kejiang.yuandl.base.BaseActivity;
+import com.kejiang.yuandl.view.RatingBar;
 import com.ldd.pullview.AbPullToRefreshView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends BaseActivity {
+    private RatingBar rb;
     private AbPullToRefreshView pr;
     private ListView listView;
 
     private void assignViews() {
+        rb = (RatingBar) findViewById(R.id.rb);
         pr = (AbPullToRefreshView) findViewById(R.id.pr);
         listView = (ListView) findViewById(R.id.listView);
     }
+
 
     @Override
     public void initTitleBar() {
@@ -33,6 +37,7 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public void initData() {
+        rb.setStar(4.5f);
         List<String> datas=new ArrayList<>();
         listView.setAdapter(new CommonAdapter<String>(context,R.layout.item_text,datas){
             @Override
