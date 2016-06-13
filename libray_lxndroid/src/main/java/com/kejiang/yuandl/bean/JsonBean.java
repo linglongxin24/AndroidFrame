@@ -9,16 +9,16 @@ import java.util.Map;
  *         json解析工具类对象
  */
 public class JsonBean {
-    private int code;
+    private int status;
     private String msg;
     private Map<String, Object> data;
 
-    public int getCode() {
-        return code;
+    public int getStatus() {
+        return status;
     }
 
-    public void setCode(int code) {
-        this.code = code;
+    public void setStatus(int status) {
+        this.status = status;
     }
 
     public String getMsg() {
@@ -40,7 +40,7 @@ public class JsonBean {
     @Override
     public String toString() {
         return "JsonBean{" +
-                "code=" + code +
+                "status=" + status +
                 ", msg='" + msg + '\'' +
                 ", data=" + data +
                 '}';

@@ -32,6 +32,7 @@ import org.xutils.ex.HttpException;
 import org.xutils.http.RequestParams;
 import org.xutils.x;
 
+import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.Map;
 
@@ -41,12 +42,14 @@ import java.util.Map;
  * @author yuandl on 2016/1/15.
  *         描述主要干什么
  */
-public class BaseFragment extends Fragment  {
+public class BaseFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return super.onCreateView(inflater, container, savedInstanceState);
     }
+
+
 
     private Callback.Cancelable cancelable;
     /**
@@ -54,30 +57,29 @@ public class BaseFragment extends Fragment  {
      */
     public LoadingDialog loadingDialog;
 
+
     /**
      * 异步网络请求类
      *
      * @param requestParams
      */
-    protected void ajax(RequestParams requestParams) {
+    private void ajax(RequestParams requestParams) {
+        ajax(requestParams, 0);
+    }
+
+    /**
+     * 异步网络请求类
+     *
+     * @param requestParams
+     * @param requestCode   区分不同的网络请求
+     */
+    protected void ajax(RequestParams requestParams, int requestCode) {
         if (!CheckNetwork.isNetworkAvailable(getContext())) {
             showToast("网络不可用，请检查网络连接！");
             return;
         }
         if (loadingDialog == null) {
             loadingDialog = new LoadingDialog(getContext());
-        }
-        if (requestParams != null) {
-            String uri = requestParams.getUri();
-            if (!uri.isEmpty()) {
-                String[] split = uri.split("/");
-//                Logger.d("split=" + Arrays.toString(split));
-                String method = split[split.length - 1].substring(0, split[split.length - 1].indexOf("."));
-                String mode = split[split.length - 2];
-                String sign = MD5.md5(mode + method);
-                requestParams.addBodyParameter("sign", sign);
-            }
-
         }
         Logger.d("url=" + requestParams.getUri() + "\nrequestParams=" + requestParams.getStringParams().toString());
         List<KeyValue> params = requestParams.getStringParams();
@@ -86,142 +88,127 @@ public class BaseFragment extends Fragment  {
                 throw new RuntimeException("参数异常！");
             }
         }
-        //                    jsonBean = JSON.parseObject(result, JsonBean.class);
-        cancelable = x.http().post(requestParams, new Callback.ProgressCallback<String>() {
-
-            @Override
-            public void onWaiting() {
-            }
-
-            @Override
-
-            public void onStarted() {
-                netOnStart();
-            }
-
-            @Override
-            public void onLoading(long total, long current, boolean isDownloading) {
-                netOnLoading(total, current, isDownloading);
-            }
-
-            @Override
-            public void onSuccess(String result) {
-                Logger.json(result);
-                JsonBean jsonBean = null;
-                try {
-//                    jsonBean = JSON.parseObject(result, JsonBean.class);
-                    jsonBean = jsonParse(result);
-                    if (jsonBean.getMsg() != null && !jsonBean.getMsg().isEmpty()) {
-                        showToast(jsonBean.getMsg());
-                    }
-                    if (jsonBean.getCode() == 200) {
-                        Map<String, Object> data = new ArrayMap<String, Object>();
-                        if (null != jsonBean.getData() && jsonBean.getData().size() > 0) {
-                            data = jsonBean.getData();
-                        }
-                        netOnSuccess(data);
-                    } else {
-
-                        netOnOtherStates(jsonBean.getCode(), jsonBean.getMsg());
-                    }
-                } catch (Exception e) {
-                    if (loadingDialog != null && loadingDialog.isShowing()) {
-                        loadingDialog.dismiss();
-                    }
-                    Logger.d(result);
-                    showToast("服务器异常！");
-                    e.printStackTrace();
-                } finally {
-                }
-            }
-
-            @Override
-            public void onError(Throwable ex, boolean isOnCallback) {
-                netOnFailure(ex);
-
-            }
-
-            @Override
-            public void onCancelled(CancelledException cex) {
-                Logger.d("用户取消了访问网络....");
-                netOnCancelled();
-            }
-
-            @Override
-            public void onFinished() {
-                netOnFinish();
-            }
-
-        });
+        cancelable = x.http().post(requestParams, new MyCallback(requestCode));
     }
-//
-//    private JsonBean jsonParse(String json) throws JSONException {
-//        Map<String, Object> map = JSON.parseObject(json, new TypeToken<Map<String, Object>>() {
-//        }.getType());
-//        JsonBean jsonBean = new JsonBean();
-//        if (map.containsKey("data")) {
-//            Object data = map.get("data");
-//            System.out.println("data.getClass().getName()=" + data.getClass().getName());
-//            Map<String, Object> rrData = null;
-//            if (data instanceof String) {
-//                System.out.println("data instanceof String");
-//                rrData = new HashMap<>();
-//                rrData.put("data", data.toString());
-//            } else if (data instanceof JSONArray) {
-//                System.out.println("data instanceof JSONArray");
-//                rrData = new HashMap<>();
-//                rrData.put("data", data);
-//            } else if (data instanceof com.alibaba.fastjson.JSONObject) {
-//                System.out.println("data instanceof JSONObject");
-//                rrData = (Map) data;
-//            }
-//            jsonBean.setData(rrData);
-//        }
-//        jsonBean.setCode(Integer.valueOf(map.get("code").toString()));
-//        jsonBean.setMsg(Tools.getValue(map, "msg"));
-//
-//        return jsonBean;
-//    }
+
+    private class MyCallback implements Callback.ProgressCallback<String> {
+        private int requestCode = 0;
+
+        public MyCallback(int requestCode) {
+            this.requestCode = requestCode;
+        }
+
+        @Override
+        public void onWaiting() {
+        }
+
+        @Override
+
+        public void onStarted() {
+            netOnStart();
+        }
+
+        @Override
+        public void onLoading(long total, long current, boolean isDownloading) {
+            netOnLoading(total, current, isDownloading);
+        }
+
+        @Override
+        public void onSuccess(String result) {
+            Logger.json(result);
+            JsonBean jsonBean = null;
+            try {
+                jsonBean = jsonParse(result);
+                if (jsonBean.getMsg() != null && !jsonBean.getMsg().isEmpty()) {
+                    showToast(jsonBean.getMsg());
+                }
+                if (jsonBean.getStatus() == 1) {
+                    Map<String, Object> data = new ArrayMap<String, Object>();
+                    if (null != jsonBean.getData() && jsonBean.getData().size() > 0) {
+                        data = jsonBean.getData();
+                    }
+                    netOnSuccess(data, requestCode);
+                } else {
+
+                    netOnOtherStates(jsonBean.getStatus(), jsonBean.getMsg());
+                }
+            } catch (Exception e) {
+                if (loadingDialog != null && loadingDialog.isShowing()) {
+                    loadingDialog.dismiss();
+                }
+                Logger.d(result);
+                showToast("服务器异常！");
+                e.printStackTrace();
+            } finally {
+            }
+        }
+
+        @Override
+        public void onError(Throwable ex, boolean isOnCallback) {
+            netOnFailure(ex);
+
+        }
+
+        @Override
+        public void onCancelled(Callback.CancelledException cex) {
+            Logger.d("用户取消了访问网络....");
+            netOnCancelled();
+        }
+
+        @Override
+        public void onFinished() {
+            netOnFinish();
+        }
+
+    }
 
     private JsonBean jsonParse(String json) throws JSONException {
-        ArrayMap<String,Object> arrayMap= JSON.parseObject(json,new TypeReference<ArrayMap<String,Object>>(){
+        ArrayMap<String, Object> arrayMap = JSON.parseObject(json, new TypeReference<ArrayMap<String, Object>>() {
         }.getType());
         JsonBean jsonBean = new JsonBean();
         if (arrayMap.containsKey("data")) {
             Object data = arrayMap.get("data");
             System.out.println("data.getClass().getName()=" + data.getClass().getName());
-            ArrayMap<String,Object> rrData = null;
+            ArrayMap<String, Object> rrData = null;
             if (data instanceof String) {
                 System.out.println("data instanceof String");
-                rrData = new ArrayMap<String,Object>();
+                rrData = new ArrayMap<String, Object>();
                 rrData.put("data", data.toString());
             } else if (data instanceof JSONArray) {
                 System.out.println("data instanceof JSONArray");
-                rrData = new ArrayMap<String,Object>();
+                rrData = new ArrayMap<String, Object>();
                 rrData.put("data", data);
             } else if (data instanceof com.alibaba.fastjson.JSONObject) {
                 System.out.println("data instanceof JSONObject");
-                rrData = JSON.parseObject(data.toString(),new TypeReference<ArrayMap<String,Object>>(){
+                rrData = JSON.parseObject(data.toString(), new TypeReference<ArrayMap<String, Object>>() {
                 }.getType());
             }
             jsonBean.setData(rrData);
         }
-        jsonBean.setCode(Integer.valueOf(arrayMap.get("code").toString()));
+        jsonBean.setStatus(Integer.valueOf(arrayMap.get("status").toString()));
         jsonBean.setMsg(Tools.getValue(arrayMap, "msg"));
 
         return jsonBean;
     }
+
     /**
      * 开始访问网络
      */
     public void netOnStart() {
-        loadingDialog.show("正在请求网络...");
+        loadingDialog.show("Loading...");
     }
 
     /**
      * 访问网络的进程
      */
     public void netOnLoading(long total, long current, boolean isUploading) {
+    }
+
+    /**
+     * 访问网络成功
+     */
+    public void netOnSuccess(Map<String, Object> data, int requestCode) {
+        netOnSuccess(data);
     }
 
     /**
@@ -234,7 +221,7 @@ public class BaseFragment extends Fragment  {
     /**
      * 访问网络成功的其他状态
      */
-    public void netOnOtherStates(int code, String msg) {
+    public void netOnOtherStates(int status, String msg) {
         if (loadingDialog != null && loadingDialog.isShowing()) {
             loadingDialog.dismiss();
         }
@@ -259,6 +246,8 @@ public class BaseFragment extends Fragment  {
             String errorResult = httpEx.getResult();
             Toast.makeText(x.app(), "网络错误：" + ex.getMessage(), Toast.LENGTH_LONG).show();
             // ...
+        } else if (ex instanceof SocketTimeoutException) {
+            Toast.makeText(x.app(), "连接服务器超时", Toast.LENGTH_LONG).show();
         } else { // 其他错误
             Toast.makeText(x.app(), "连接服务器失败，请稍后再试！ex=" + ex.getMessage(), Toast.LENGTH_SHORT).show();
             // ...
@@ -273,16 +262,6 @@ public class BaseFragment extends Fragment  {
     public void netOnCancelled() {
     }
 
-
-    //    /**
-//     * 弹出Toast便捷方法
-//     *
-//     * @param charSequence
-//     */
-//    public void showToast(CharSequence charSequence) {
-//        Toast.makeText(getContext(), charSequence, Toast.LENGTH_SHORT).show();
-//
-//    }
     private Toast toast;
 
     /**
@@ -378,6 +357,7 @@ public class BaseFragment extends Fragment  {
         ((ViewGroup) listView.getParent()).addView(emptyView);
         listView.setEmptyView(emptyView);
     }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
