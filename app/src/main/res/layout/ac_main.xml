@@ -19,7 +19,7 @@
         app:starEmpty="@mipmap/star_grey"
         app:starFill="@mipmap/star_yellow"
         app:starHalf="@mipmap/star_half_yellow"
-        app:starImageSize="20dp"
+        app:starImageSize="30dp"
         app:starStep="4.5"></com.kejiang.yuandl.view.RatingBar>
 
     <com.ldd.pullview.AbPullToRefreshView

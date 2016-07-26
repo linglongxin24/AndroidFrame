@@ -140,6 +140,7 @@ public class MyGallery extends Gallery implements OnItemSelectedListener {
 
     public void destroy() {
         timer.cancel();
+        mHandler.removeCallbacks(task);
     }
 
     @Override

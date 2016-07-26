@@ -90,7 +90,7 @@ public class ImageDispose {
         System.gc();
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPurgeable = true;
-        options.inSampleSize = 2;
+        options.inSampleSize = inSampleSize;
         return options;
     }
 

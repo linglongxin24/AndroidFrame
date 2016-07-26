@@ -32,7 +32,7 @@ public class FragmentTabAdapter implements OnCheckedChangeListener {
         // 默认显示第一页
         FragmentTransaction ft = fragmentActivity.getSupportFragmentManager()
                 .beginTransaction();
-        ft.add(fragmentContentId, fragments.get(currentTab));
+        ft.add(fragmentContentId, fragments.get(currentTab),String.valueOf(currentTab));
         ft.commitAllowingStateLoss();
         if (rg != null) {
             rg.setOnCheckedChangeListener(this);
@@ -74,7 +74,7 @@ public class FragmentTabAdapter implements OnCheckedChangeListener {
                             fragment.onResume(); // 启动目标tab的onResume()
                         }
                     } else {
-                        ft.add(fragmentContentId, fragment);
+                        ft.add(fragmentContentId, fragment,String.valueOf(currentTab));
                     }
                     showTab(i); // 显示目标tab
                     ft.commitAllowingStateLoss();

@@ -49,7 +49,7 @@ public class SharedPreferencesUtils {
 
 		String type = object.getClass().getSimpleName();
 		SharedPreferences sp = context.getSharedPreferences(FILE_NAME,
-				Context.MODE_PRIVATE);
+				Context.MODE_MULTI_PROCESS);
 		SharedPreferences.Editor editor = sp.edit();
 		if ("String".equals(type)) {
 			editor.putString(key,  object.toString());

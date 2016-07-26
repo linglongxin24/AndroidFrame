@@ -1,21 +1,30 @@
 package com.kejiang.yuandl.base;
 
-import android.app.Dialog;
+import android.annotation.TargetApi;
+import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.Looper;
+import android.os.MessageQueue;
 import android.support.v4.util.ArrayMap;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
+import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -30,6 +39,8 @@ import com.kejiang.yuandl.R;
 import com.kejiang.yuandl.bean.JsonBean;
 import com.kejiang.yuandl.utils.AppManager;
 import com.kejiang.yuandl.utils.CheckNetwork;
+import com.kejiang.yuandl.utils.Reflector;
+import com.kejiang.yuandl.utils.SharedPreferencesUtils;
 import com.kejiang.yuandl.utils.Tools;
 import com.kejiang.yuandl.view.LoadingDialog;
 import com.orhanobut.logger.Logger;
@@ -38,13 +49,17 @@ import com.zhy.autolayout.utils.AutoUtils;
 
 import org.xutils.common.Callback;
 import org.xutils.common.util.KeyValue;
-import org.xutils.common.util.MD5;
 import org.xutils.ex.HttpException;
 import org.xutils.http.RequestParams;
 import org.xutils.x;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * com.bm.falvzixun.activities.BaseActivity;
@@ -60,7 +75,6 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
     private LinearLayout llRoot;
     private LinearLayout layout_titlebar;
     protected Context context;
-    Dialog dialog;
     /**
      * 加载数据对话框
      */
@@ -118,6 +132,10 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
             // 透明导航栏
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
         }
+    }
+
+    protected FrameLayout getContentLayout() {
+        return mContentLayout;
     }
 
     /**
@@ -373,216 +391,251 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
     protected void startActivity(Class c) {
         startActivity(new Intent(context, c));
     }
-//
-//    /**
-//     * 异步网络请求类
-//     *
-//     * @param requestParams
-//     */
-//    protected void ajax(RequestParams requestParams) {
-//        if (!CheckNetwork.isNetworkAvailable(context)) {
-//            showToast("网络不可用，请检查网络连接！");
-//            return;
-//        }
-//        if (loadingDialog == null) {
-//            loadingDialog = new LoadingDialog(context);
-//        }
-//        if (requestParams != null) {
-//            String uri = requestParams.getUri();
-//            if (!uri.isEmpty()) {
-//                String[] split = uri.split("/");
-////                Logger.d("split=" + Arrays.toString(split));
-//
-//                String method = null;
-//                try {
-//                    method = split[split.length - 1].substring(0, split[split.length - 1].indexOf("."));
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                    Logger.d("请检查服务器地址后面是否含有.html");
-//                }
-//                String mode = split[split.length - 2];
-//                String sign = MD5.md5(mode + method);
-//                requestParams.addBodyParameter("sign", sign);
-//            }
-//
-//        }
-//        Logger.d("url=" + requestParams.getUri() + "\nrequestParams=" + requestParams.getStringParams().toString());
-//        List<KeyValue> params = requestParams.getStringParams();
-//        for (KeyValue keyValue : params) {
-//            if (keyValue.key.contains(":")) {
-//                throw new RuntimeException("参数异常！");
-//            }
-//        }
-//        //                    jsonBean = JSON.parseObject(result, JsonBean.class);
-//        cancelable = x.http().post(requestParams, new Callback.ProgressCallback<String>() {
-//
-//            @Override
-//            public void onWaiting() {
-//            }
-//
-//            @Override
-//
-//            public void onStarted() {
-//                netOnStart();
-//            }
-//
-//            @Override
-//            public void onLoading(long total, long current, boolean isDownloading) {
-//                netOnLoading(total, current, isDownloading);
-//            }
-//
-//            @Override
-//            public void onSuccess(String result) {
-//
-//                Logger.json(result);
-//                JsonBean jsonBean = null;
-//                try {
-////                    jsonBean = JSON.parseObject(result, JsonBean.class);
-//                    jsonBean = jsonParse(result);
-//                    if (jsonBean.getMsg() != null && !jsonBean.getMsg().isEmpty()) {
-//                        showToast(jsonBean.getMsg());
-//                    }
-//                    if (jsonBean.getCode() == 200) {
-//                        Map<String, Object> data = new ArrayMap<String, Object>();
-//                        if (null != jsonBean.getData() && jsonBean.getData().size() > 0) {
-//                            data = jsonBean.getData();
-//                        }
-//                        netOnSuccess(data);
-//                    } else {
-//
-//                        netOnOtherStates(jsonBean.getCode(), jsonBean.getMsg());
-//                    }
-//                } catch (Exception e) {
-//                    if (loadingDialog != null && loadingDialog.isShowing()) {
-//                        loadingDialog.dismiss();
-//                    }
-//                    Logger.d(result);
-//                    showToast("服务器异常！");
-//                    e.printStackTrace();
-//                } finally {
-//                }
-//            }
-//
-//            @Override
-//            public void onError(Throwable ex, boolean isOnCallback) {
-//                netOnFailure(ex);
-//
-//            }
-//
-//            @Override
-//            public void onCancelled(CancelledException cex) {
-//                Logger.d("用户取消了访问网络....");
-//                netOnCancelled();
-//            }
-//
-//            @Override
-//            public void onFinished() {
-//                netOnFinish();
-//            }
-//
-//        });
-//    }
-//
-//
-//    private JsonBean jsonParse(String json) throws JSONException {
-//        ArrayMap<String,Object> arrayMap= JSON.parseObject(json,new TypeReference<ArrayMap<String,Object>>(){
-//        }.getType());
-//        JsonBean jsonBean = new JsonBean();
-//        if (arrayMap.containsKey("data")) {
-//            Object data = arrayMap.get("data");
+
+    /**
+     * 异步网络请求类
+     *
+     * @param requestParams
+     */
+    protected void ajax(RequestParams requestParams) {
+        ajax(requestParams, 0);
+    }
+
+    /**
+     * 异步网络请求类
+     *
+     * @param requestParams
+     * @param requestCode   区分不同的网络请求
+     */
+    protected void ajax(RequestParams requestParams, int requestCode) {
+        if (!CheckNetwork.isNetworkAvailable(context)) {
+            showToast("网络不可用，请检查网络连接！");
+            netOnFailure(new Exception("网络不可用"), requestCode);
+            return;
+        }
+        if (loadingDialog == null) {
+            loadingDialog = new LoadingDialog(context);
+        }
+        SharedPreferencesUtils sp = new SharedPreferencesUtils(x.app());
+        boolean isLogin = (boolean) sp.getParam("login", false);
+        if (isLogin) {
+            requestParams.addBodyParameter("mId", (String) sp.getParam("mId", ""));
+        }
+        boolean hasLocation = (boolean) sp.getParam("hasLocation", false);
+        if (hasLocation) {
+            requestParams.addBodyParameter("lng", (String) sp.getParam("lng", ""));
+            requestParams.addBodyParameter("lat", (String) sp.getParam("lat", ""));
+        }
+        Logger.d("url=" + requestParams.getUri() + "\nrequestParams=" + requestParams.getStringParams().toString());
+        List<KeyValue> params = requestParams.getStringParams();
+        for (KeyValue keyValue : params) {
+            if (keyValue.key.contains(":")) {
+                throw new RuntimeException("参数异常！");
+            }
+        }
+        cancelable = x.http().post(requestParams, new MyCallback(requestCode));
+    }
+
+    private class MyCallback implements Callback.ProgressCallback<String> {
+        private int requestCode = 0;
+
+        public MyCallback(int requestCode) {
+            this.requestCode = requestCode;
+        }
+
+        @Override
+        public void onWaiting() {
+        }
+
+        @Override
+
+        public void onStarted() {
+            netOnStart();
+        }
+
+        @Override
+        public void onLoading(long total, long current, boolean isDownloading) {
+            netOnLoading(total, current, isDownloading);
+        }
+
+        @Override
+        public void onSuccess(String result) {
+            Logger.json(result);
+            JsonBean jsonBean = null;
+            try {
+                jsonBean = jsonParse(result);
+                if (jsonBean.getMsg() != null && !jsonBean.getMsg().isEmpty()) {
+                    showToast(jsonBean.getMsg());
+                }
+                if (jsonBean.getStatus() == 1) {
+                    Map<String, Object> data = new ArrayMap<String, Object>();
+                    if (null != jsonBean.getData() && jsonBean.getData().size() > 0) {
+                        data = jsonBean.getData();
+                    }
+                    netOnSuccess(data, requestCode);
+                } else {
+                    netOnOtherStates(jsonBean.getStatus(), jsonBean.getMsg(), requestCode);
+                }
+            } catch (Exception e) {
+                if (loadingDialog != null && loadingDialog.isShowing()) {
+                    loadingDialog.dismiss();
+                }
+                Logger.d(result);
+                showToast("服务器异常！");
+                e.printStackTrace();
+            } finally {
+            }
+        }
+
+        @Override
+        public void onError(Throwable ex, boolean isOnCallback) {
+            netOnFailure(ex, requestCode);
+
+        }
+
+        @Override
+        public void onCancelled(Callback.CancelledException cex) {
+            Logger.d("用户取消了访问网络....");
+            netOnCancelled();
+        }
+
+        @Override
+        public void onFinished() {
+            netOnFinish(requestCode);
+        }
+
+
+    }
+
+    private JsonBean jsonParse(String json) throws JSONException {
+        ArrayMap<String, Object> arrayMap = JSON.parseObject(json, new TypeReference<ArrayMap<String, Object>>() {
+        }.getType());
+        JsonBean jsonBean = new JsonBean();
+        if (arrayMap.containsKey("data")) {
+            Object data = arrayMap.get("data");
 //            System.out.println("data.getClass().getName()=" + data.getClass().getName());
-//            ArrayMap<String,Object> rrData = null;
-//            if (data instanceof String) {
+            ArrayMap<String, Object> rrData = null;
+            if (data instanceof String) {
 //                System.out.println("data instanceof String");
-//                rrData = new ArrayMap<String,Object>();
-//                rrData.put("data", data.toString());
-//            } else if (data instanceof JSONArray) {
+                rrData = new ArrayMap<String, Object>();
+                rrData.put("data", data.toString());
+            } else if (data instanceof JSONArray) {
 //                System.out.println("data instanceof JSONArray");
-//                rrData = new ArrayMap<String,Object>();
-//                rrData.put("data", data);
-//            } else if (data instanceof com.alibaba.fastjson.JSONObject) {
+                rrData = new ArrayMap<String, Object>();
+                rrData.put("data", data);
+            } else if (data instanceof com.alibaba.fastjson.JSONObject) {
 //                System.out.println("data instanceof JSONObject");
-//                rrData = JSON.parseObject(data.toString(),new TypeReference<ArrayMap<String,Object>>(){
-//                }.getType());
-//            }
-//            jsonBean.setData(rrData);
-//        }
-//        jsonBean.setCode(Integer.valueOf(arrayMap.get("code").toString()));
-//        jsonBean.setMsg(Tools.getValue(arrayMap, "msg"));
-//
-//        return jsonBean;
-//    }
-//
-//
-//    /**
-//     * 开始访问网络
-//     */
-//    public void netOnStart() {
-//        loadingDialog.show("正在获取数据...");
-//    }
-//
-//    /**
-//     * 访问网络的进程
-//     */
-//    public void netOnLoading(long total, long current, boolean isUploading) {
-//    }
-//
-//    /**
-//     * 访问网络成功
-//     */
-//    public void netOnSuccess(Map<String, Object> data) {
-//        if (loadingDialog != null) {
-//            loadingDialog.dismiss();
-//        }
-//    }
-//
-//    /**
-//     * 访问网络成功的其他状态
-//     */
-//    public void netOnOtherStates(int code, String msg) {
-//        if (loadingDialog != null) {
-//            loadingDialog.dismiss();
-//        }
-//    }
-//
-//    /**
-//     * 访问网络结束
-//     */
-//    public void netOnFinish() {
-//        loadingDialog.dismiss();
-//    }
-//
-//    /**
-//     * 访问网络失败
-//     */
-//    public void netOnFailure(Throwable ex) {
-//        if (loadingDialog != null) {
-//            loadingDialog.dismiss();
-//        }
-//        Logger.d(ex.getMessage());
-//        if (ex instanceof HttpException) { // 网络错误
-//            HttpException httpEx = (HttpException) ex;
-//            int responseCode = httpEx.getCode();
-//            String responseMsg = httpEx.getMessage();
-//            String errorResult = httpEx.getResult();
-//            Toast.makeText(x.app(), "网络错误：" + ex.getMessage(), Toast.LENGTH_LONG).show();
-//            // ...
-//        } else { // 其他错误
-//            Toast.makeText(context, "连接服务器失败，请稍后再试！ex=" + ex.getMessage(), Toast.LENGTH_SHORT).show();
-//            // ...
-//        }
-//
-//
-//    }
-//
-//    /**
-//     * 取消访问网络
-//     */
-//    public void netOnCancelled() {
-//        if (loadingDialog != null) {
-//            loadingDialog.dismiss();
-//        }
-//    }
+                rrData = JSON.parseObject(data.toString(), new TypeReference<ArrayMap<String, Object>>() {
+                }.getType());
+            }
+            jsonBean.setData(rrData);
+        } else {
+            Set<String> keys = arrayMap.keySet();
+            ArrayMap<String, Object> rrData = new ArrayMap<>();
+            for (String s : keys) {
+                if (!s.equals("status")) {
+                    rrData.put(s, arrayMap.get(s));
+                }
+            }
+            jsonBean.setData(rrData);
+        }
+        jsonBean.setStatus(Integer.valueOf(arrayMap.get("status").toString()));
+        jsonBean.setMsg(Tools.getValue(arrayMap, "msg"));
+
+        return jsonBean;
+    }
+
+    /**
+     * 开始访问网络
+     */
+    protected void netOnStart() {
+        loadingDialog.show("Loading...");
+    }
+
+    /**
+     * 访问网络的进程
+     */
+    protected void netOnLoading(long total, long current, boolean isUploading) {
+    }
+
+    /**
+     * 访问网络成功
+     */
+    protected void netOnSuccess(Map<String, Object> data, int requestCode) {
+        netOnSuccess(data);
+    }
+
+    /**
+     * 访问网络成功
+     */
+    protected void netOnSuccess(Map<String, Object> data) {
+
+    }
+
+    /**
+     * 访问网络成功的其他状态
+     */
+    protected void netOnOtherStates(int status, String msg) {
+        if (loadingDialog != null && loadingDialog.isShowing()) {
+            loadingDialog.dismiss();
+        }
+    }
+
+    /**
+     * 访问网络成功的其他状态
+     */
+    protected void netOnOtherStates(int status, String msg, int requestCode) {
+        netOnOtherStates(status, msg);
+    }
+
+    /**
+     * 访问网络结束
+     */
+    protected void netOnFinish() {
+        loadingDialog.dismiss();
+    }
+
+    /**
+     * 访问网络结束
+     */
+    protected void netOnFinish(int requestCode) {
+        loadingDialog.dismiss();
+        netOnFinish();
+    }
+
+    /**
+     * 访问网络失败
+     */
+    protected void netOnFailure(Throwable ex, int requestCode) {
+        netOnFailure(ex);
+    }
+
+    /**
+     * 访问网络失败
+     */
+    protected void netOnFailure(Throwable ex) {
+        Logger.d(ex.getMessage());
+        if (ex instanceof HttpException) { // 网络错误
+            HttpException httpEx = (HttpException) ex;
+            int responseCode = httpEx.getCode();
+            String responseMsg = httpEx.getMessage();
+            String errorResult = httpEx.getResult();
+            Toast.makeText(x.app(), "网络错误：" + ex.getMessage(), Toast.LENGTH_LONG).show();
+            // ...
+        } else if (ex instanceof SocketTimeoutException) {
+            Toast.makeText(x.app(), "连接服务器超时", Toast.LENGTH_LONG).show();
+        } else if (ex != null && "网络不可用".equals(ex.getMessage())) {
+        } else { // 其他错误
+            Toast.makeText(x.app(), "连接服务器失败，请稍后再试！", Toast.LENGTH_SHORT).show();
+            // ...
+        }
+    }
+
+    /**
+     * 取消访问网络
+     */
+    protected void netOnCancelled() {
+    }
 
     @Override
     public void onBackPressed() {
@@ -599,7 +652,7 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
 
     }
 
-    protected void setEmptyView(ListView listView) {
+    protected <T extends View> T setEmptyView(ListView listView) {
         TextView emptyView = new TextView(context);
         emptyView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         emptyView.setText("暂无数据！");
@@ -608,9 +661,10 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
         emptyView.setVisibility(View.GONE);
         ((ViewGroup) listView.getParent()).addView(emptyView);
         listView.setEmptyView(emptyView);
+        return (T) emptyView;
     }
 
-    protected void setEmptyView(ListView listView, String text) {
+    protected <T extends View> T setEmptyView(ListView listView, String text) {
         TextView emptyView = new TextView(context);
         emptyView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         emptyView.setText(text);
@@ -619,26 +673,121 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
         emptyView.setVisibility(View.GONE);
         ((ViewGroup) listView.getParent()).addView(emptyView);
         listView.setEmptyView(emptyView);
+        return (T) emptyView;
+    }
+
+    protected <T extends View> T setEmptyView(GridView gridView) {
+        TextView emptyView = new TextView(context);
+        emptyView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        emptyView.setText("暂无数据！");
+        emptyView.setGravity(Gravity.CENTER);
+        emptyView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        emptyView.setVisibility(View.GONE);
+        ((ViewGroup) gridView.getParent()).addView(emptyView);
+        gridView.setEmptyView(emptyView);
+        return (T) emptyView;
+    }
+
+    protected <T extends View> T setEmptyView(GridView gridView, String text) {
+        TextView emptyView = new TextView(context);
+        emptyView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        emptyView.setText(text);
+        emptyView.setGravity(Gravity.CENTER);
+        emptyView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        emptyView.setVisibility(View.GONE);
+        ((ViewGroup) gridView.getParent()).addView(emptyView);
+        gridView.setEmptyView(emptyView);
+        return (T) emptyView;
     }
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+//        fixFocusedViewLeak(x.app());
+//        fixInputMethodManager();
         mContentLayout.removeAllViews();
         mContentLayout = null;
+        if (cancelable != null && !cancelable.isCancelled()) {
+            cancelable.cancel();
+        }
         AppManager.getAppManager().finishActivity(this);
+        super.onDestroy();
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (null != this.getCurrentFocus()) {
-            /**
-             * 点击空白位置 隐藏软键盘
-             */
-            InputMethodManager mInputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            return mInputMethodManager.hideSoftInputFromWindow(this.getCurrentFocus().getWindowToken(), 0);
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            View v = getCurrentFocus();
+            if (isShouldHideKeyboard(v, ev)) {
+                hideKeyboard(v.getWindowToken());
+            }
         }
-        return super.onTouchEvent(event);
+        return super.dispatchTouchEvent(ev);
     }
+
+    /**
+     * 根据EditText所在坐标和用户点击的坐标相对比，来判断是否隐藏键盘，因为当用户点击EditText时则不能隐藏
+     *
+     * @param v
+     * @param event
+     * @return
+     */
+    private boolean isShouldHideKeyboard(View v, MotionEvent event) {
+        if (v != null && (v instanceof EditText)) {
+            int[] l = {0, 0};
+            v.getLocationInWindow(l);
+            int left = l[0],
+                    top = l[1],
+                    bottom = top + v.getHeight(),
+                    right = left + v.getWidth();
+            if (event.getX() > left && event.getX() < right
+                    && event.getY() > top && event.getY() < bottom) {
+                // 点击EditText的事件，忽略它。
+                return false;
+            } else {
+                return true;
+            }
+        }
+        // 如果焦点不是EditText则忽略，这个发生在视图刚绘制完，第一个焦点不在EditText上，和用户用轨迹球选择其他的焦点
+        return false;
+    }
+
+    /**
+     * 获取InputMethodManager，隐藏软键盘
+     *
+     * @param token
+     */
+    private void hideKeyboard(IBinder token) {
+        if (token != null) {
+            InputMethodManager im = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            im.hideSoftInputFromWindow(token, InputMethodManager.HIDE_NOT_ALWAYS);
+        }
+    }
+
+    //    @Override
+//    public boolean onTouchEvent(MotionEvent event) {
+//        if (null != this.getCurrentFocus()) {
+//            /**
+//             * 点击空白位置 隐藏软键盘
+//             */
+//            InputMethodManager mInputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+//            return mInputMethodManager.hideSoftInputFromWindow(this.getCurrentFocus().getWindowToken(), 0);
+//        }
+//        return super.onTouchEvent(event);
+//    }
+    private void fixInputMethodManager() {
+        final Object imm = getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        final Reflector.TypedObject windowToken
+                = new Reflector.TypedObject(getWindow().getDecorView().getWindowToken(), IBinder.class);
+
+        Reflector.invokeMethodExceptionSafe(imm, "windowDismissed", windowToken);
+
+        final Reflector.TypedObject view
+                = new Reflector.TypedObject(null, View.class);
+
+        Reflector.invokeMethodExceptionSafe(imm, "startGettingWindowFocus", view);
+    }
+
+
 }
 

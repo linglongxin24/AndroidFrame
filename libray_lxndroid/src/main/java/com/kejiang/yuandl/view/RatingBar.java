@@ -93,7 +93,7 @@ public class RatingBar extends LinearLayout {
                                 }
 
                                 if (indexOfChild(v) > fint) {
-                                    setStar(indexOfChild(v) + 0.5f);
+                                    setStar(indexOfChild(v) + 1);
                                 } else if (indexOfChild(v) == fint) {
                                     if (imageView.getDrawable().getCurrent().getConstantState().equals(starHalfDrawable.getConstantState())) {
                                         setStar(indexOfChild(v) + 1);
@@ -101,7 +101,7 @@ public class RatingBar extends LinearLayout {
                                         setStar(indexOfChild(v) + 0.5f);
                                     }
                                 } else {
-                                    setStar(indexOfChild(v) + 1);
+                                    setStar(indexOfChild(v) + 1f);
                                 }
 
                             }

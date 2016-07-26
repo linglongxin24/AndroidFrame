@@ -53,7 +53,10 @@ public abstract class CommonAdapter<T> extends RecyclerView.Adapter<ViewHolder>
     {
         return true;
     }
-
+    public void notifyDataSetChanged(List<T> datas) {
+        this.mDatas = datas;
+        this.notifyDataSetChanged();
+    }
 
     protected void setListener(final ViewGroup parent, final ViewHolder viewHolder, int viewType)
     {
@@ -99,7 +102,7 @@ public abstract class CommonAdapter<T> extends RecyclerView.Adapter<ViewHolder>
     @Override
     public int getItemCount()
     {
-        return mDatas.size();
+        return  mDatas==null?0:mDatas.size();
     }
 
 
