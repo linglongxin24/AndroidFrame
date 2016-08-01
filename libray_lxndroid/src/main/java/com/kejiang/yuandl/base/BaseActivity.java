@@ -53,10 +53,12 @@ import org.xutils.ex.HttpException;
 import org.xutils.http.RequestParams;
 import org.xutils.x;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.SocketTimeoutException;
+import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -460,7 +462,7 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
 
         @Override
         public void onSuccess(String result) {
-            Logger.json(result);
+                Logger.json(result);
             JsonBean jsonBean = null;
             try {
                 jsonBean = jsonParse(result);

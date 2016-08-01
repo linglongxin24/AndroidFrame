@@ -8,6 +8,8 @@ import com.kejiang.yuandl.base.BaseActivity;
 import com.kejiang.yuandl.view.RatingBar;
 import com.ldd.pullview.AbPullToRefreshView;
 
+import org.xutils.http.RequestParams;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +17,7 @@ public class MainActivity extends BaseActivity {
     private RatingBar rb;
     private AbPullToRefreshView pr;
     private ListView listView;
-
+    public static final String ADDRESS_LIST = "http://220.191.205.232:9003/WZ_WebService.asmx/GetEmpInfo";// 客户
     private void assignViews() {
         rb = (RatingBar) findViewById(R.id.rb);
         pr = (AbPullToRefreshView) findViewById(R.id.pr);
@@ -57,6 +59,7 @@ public class MainActivity extends BaseActivity {
 
             }
         });
+//        ajax(new RequestParams(ADDRESS_LIST));
     }
 
     @Override

@@ -119,8 +119,12 @@ public class MyGallery extends Gallery implements OnItemSelectedListener {
 
     private void InitFocusIndicatorContainer() {
         ll_focus_indicator_container.removeAllViews();
-        if (count <= 1) {
+        if (count == 0) {
+            destroy();
             return;
+        }
+        if(count == 1){
+            destroy();
         }
         for (int i = 0; i < count; i++) {
             ImageView localImageView = new ImageView(getContext());
