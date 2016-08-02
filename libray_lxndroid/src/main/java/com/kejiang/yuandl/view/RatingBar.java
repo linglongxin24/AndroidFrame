@@ -31,6 +31,7 @@ public class RatingBar extends LinearLayout {
     private Drawable starEmptyDrawable;
     private Drawable starFillDrawable;
     private Drawable starHalfDrawable;
+    private final StepSize stepSize;
 
     public void setStarHalfDrawable(Drawable starHalfDrawable) {
         this.starHalfDrawable = starHalfDrawable;
@@ -68,11 +69,13 @@ public class RatingBar extends LinearLayout {
         TypedArray mTypedArray = context.obtainStyledAttributes(attrs, R.styleable.RatingBar);
         starImageSize = mTypedArray.getDimension(R.styleable.RatingBar_starImageSize, 20);
         starStep = mTypedArray.getFloat(R.styleable.RatingBar_starStep, 1.0f);
+        stepSize = StepSize.fromStep(mTypedArray.getInt(R.styleable.RatingBar_stepSize, 1));
         starCount = mTypedArray.getInteger(R.styleable.RatingBar_starCount, 5);
         starEmptyDrawable = mTypedArray.getDrawable(R.styleable.RatingBar_starEmpty);
         starFillDrawable = mTypedArray.getDrawable(R.styleable.RatingBar_starFill);
         starHalfDrawable = mTypedArray.getDrawable(R.styleable.RatingBar_starHalf);
         mClickable = mTypedArray.getBoolean(R.styleable.RatingBar_clickable, true);
+        mTypedArray.recycle();
         for (int i = 0; i < starCount; ++i) {
             final ImageView imageView = getStarImageView(context, attrs);
             imageView.setImageDrawable(starEmptyDrawable);
@@ -95,6 +98,9 @@ public class RatingBar extends LinearLayout {
                                 if (indexOfChild(v) > fint) {
                                     setStar(indexOfChild(v) + 1);
                                 } else if (indexOfChild(v) == fint) {
+                                    if(stepSize==StepSize.Full){
+                                        return;
+                                    }
                                     if (imageView.getDrawable().getCurrent().getConstantState().equals(starHalfDrawable.getConstantState())) {
                                         setStar(indexOfChild(v) + 1);
                                     } else {

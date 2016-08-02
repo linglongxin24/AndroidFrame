@@ -39,8 +39,8 @@
     <declare-styleable name="Dialog">
         <attr name="DialogTitleAppearance" format="reference" />
         <attr name="DialogTitleText" format="reference|string" />
-        <attr name="DialogSpotColor" format="reference|color"/>
-        <attr name="DialogSpotCount" format="integer"/>
+        <attr name="DialogSpotColor" format="reference|color" />
+        <attr name="DialogSpotCount" format="integer" />
     </declare-styleable>
     <declare-styleable name="RichText">
         <attr name="placeHolder" format="reference" />
@@ -65,23 +65,33 @@
         <attr name="border_width" format="dimension" />
         <attr name="border_color" format="color" />
     </declare-styleable>
-    <declare-styleable name="RatingBar" >
+    <declare-styleable name="RatingBar">
         <!--尺寸值-->
-        <attr name="starImageSize" format="dimension"/>
-        <attr name="starCount" format="integer"/>
-        <!--资源文件值-->
-        <attr name="starEmpty" format="reference"/>
-        <!--资源文件值-->
-        <attr name="starFill" format="reference"/>
-        <!--资源文件值-->
-        <attr name="starHalf" format="reference"/>
-        <!--boolean值-->
-        <attr name="clickable" format="boolean"/>
+        <attr name="starImageSize" format="dimension" />
+        <!--星星总数-->
+        <attr name="starCount" format="integer" />
+        <!--空白的星星资源文件值-->
+        <attr name="starEmpty" format="reference" />
+        <!--满星资源文件值-->
+        <attr name="starFill" format="reference" />
+        <!--半星资源文件值-->
+        <attr name="starHalf" format="reference" />
+        <!--是否可点击boolean值-->
+        <attr name="clickable" format="boolean" />
         <!--当前进度float值-->
-        <attr name="starStep" format="float"/>
+        <attr name="starStep" format="float" />
+        <!--每次进度float值-->
+        <attr name="stepSize">
+            <enum name="Half" value="0" />
+            <enum name="Full" value="1" />
+        </attr>
     </declare-styleable>
 
-
+    <declare-styleable name="isHalfStar">
+        <attr name="language">
+            <enum name="English" value="1" />
+        </attr>
+    </declare-styleable>
     <declare-styleable name="AutoTabLayout">
         <attr name="auto_textSize_base_width" format="boolean"></attr>
     </declare-styleable>
@@ -89,13 +99,13 @@
 
     <declare-styleable name="SlideDetailsLayout">
         <!-- float value for indicate the moment of switch panel-->
-        <attr name="percent" format="float"/>
+        <attr name="percent" format="float" />
         <!-- how long the animation keep-->
-        <attr name="duration" format="integer"/>
+        <attr name="duration" format="integer" />
         <!-- default panel to show after init-->
         <attr name="default_panel" format="enum">
-            <enum name="front" value="0"/>
-            <enum name="behind" value="1"/>
+            <enum name="front" value="0" />
+            <enum name="behind" value="1" />
         </attr>
     </declare-styleable>
 </resources>
