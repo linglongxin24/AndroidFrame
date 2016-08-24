@@ -61,6 +61,7 @@ import java.net.SocketTimeoutException;
 import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
+import java.util.Observer;
 import java.util.Set;
 
 /**
@@ -452,7 +453,7 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
         @Override
 
         public void onStarted() {
-            netOnStart();
+            netOnStart(requestCode);
         }
 
         @Override
@@ -546,7 +547,12 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
 
         return jsonBean;
     }
-
+    /**
+     * 开始访问网络
+     */
+    protected void netOnStart(int requestCode) {
+        netOnStart();
+    }
     /**
      * 开始访问网络
      */
@@ -622,7 +628,7 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
             int responseCode = httpEx.getCode();
             String responseMsg = httpEx.getMessage();
             String errorResult = httpEx.getResult();
-            Toast.makeText(x.app(), "网络错误：" + ex.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(x.app(), "网络繁忙", Toast.LENGTH_LONG).show();
             // ...
         } else if (ex instanceof SocketTimeoutException) {
             Toast.makeText(x.app(), "连接服务器超时", Toast.LENGTH_LONG).show();
@@ -706,6 +712,7 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
     protected void onDestroy() {
 //        fixFocusedViewLeak(x.app());
 //        fixInputMethodManager();
+//        fixInputMethodManagerLeak(this);
         mContentLayout.removeAllViews();
         mContentLayout = null;
         if (cancelable != null && !cancelable.isCancelled()) {
@@ -790,6 +797,48 @@ public abstract class BaseActivity extends AutoLayoutActivity implements View.On
         Reflector.invokeMethodExceptionSafe(imm, "startGettingWindowFocus", view);
     }
 
+    public static void fixInputMethodManagerLeak(Context context) {
+        if (context == null) {
+            return;
+        }
+        try {
+            // 对 mCurRootView mServedView mNextServedView 进行置空...
+            InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm == null) {
+                return;
+            }// author:sodino mail:sodino@qq.com
 
+            Object obj_get = null;
+            Field f_mCurRootView = imm.getClass().getDeclaredField("mCurRootView");
+            Field f_mServedView = imm.getClass().getDeclaredField("mServedView");
+            Field f_mNextServedView = imm.getClass().getDeclaredField("mNextServedView");
+
+            if (f_mCurRootView.isAccessible() == false) {
+                f_mCurRootView.setAccessible(true);
+            }
+            obj_get = f_mCurRootView.get(imm);
+            if (obj_get != null) { // 不为null则置为空
+                f_mCurRootView.set(imm, null);
+            }
+
+            if (f_mServedView.isAccessible() == false) {
+                f_mServedView.setAccessible(true);
+            }
+            obj_get = f_mServedView.get(imm);
+            if (obj_get != null) { // 不为null则置为空
+                f_mServedView.set(imm, null);
+            }
+
+            if (f_mNextServedView.isAccessible() == false) {
+                f_mNextServedView.setAccessible(true);
+            }
+            obj_get = f_mNextServedView.get(imm);
+            if (obj_get != null) { // 不为null则置为空
+                f_mNextServedView.set(imm, null);
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+    }
 }
 

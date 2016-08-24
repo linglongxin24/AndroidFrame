@@ -18,18 +18,15 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.TypeReference;
-import com.kejiang.yuandl.app.MyApplication;
 import com.kejiang.yuandl.bean.JsonBean;
 import com.kejiang.yuandl.utils.CheckNetwork;
 import com.kejiang.yuandl.utils.SharedPreferencesUtils;
 import com.kejiang.yuandl.utils.Tools;
 import com.kejiang.yuandl.view.LoadingDialog;
 import com.orhanobut.logger.Logger;
-import com.squareup.leakcanary.RefWatcher;
 
 import org.xutils.common.Callback;
 import org.xutils.common.util.KeyValue;
-import org.xutils.common.util.MD5;
 import org.xutils.ex.HttpException;
 import org.xutils.http.RequestParams;
 import org.xutils.x;
@@ -120,7 +117,7 @@ public class BaseFragment extends Fragment {
         @Override
 
         public void onStarted() {
-            netOnStart();
+            netOnStart(requestCode);
         }
 
         @Override
@@ -220,6 +217,12 @@ public class BaseFragment extends Fragment {
     protected void netOnStart() {
         loadingDialog.show("Loading...");
     }
+  /**
+     * 开始访问网络
+     */
+    protected void netOnStart(int requestCode) {
+        netOnStart();
+    }
 
     /**
      * 访问网络的进程
@@ -282,7 +285,7 @@ public class BaseFragment extends Fragment {
             int responseCode = httpEx.getCode();
             String responseMsg = httpEx.getMessage();
             String errorResult = httpEx.getResult();
-            Toast.makeText(x.app(), "网络错误：" + ex.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(x.app(), "网络繁忙", Toast.LENGTH_LONG).show();
             // ...
         } else if (ex instanceof SocketTimeoutException) {
             Toast.makeText(x.app(), "连接服务器超时", Toast.LENGTH_LONG).show();
@@ -426,8 +429,8 @@ public class BaseFragment extends Fragment {
         if (cancelable != null && !cancelable.isCancelled()) {
             cancelable.cancel();
         }
-        RefWatcher refWatcher = MyApplication.getRefWatcher(getActivity());
-        refWatcher.watch(this);
+//        RefWatcher refWatcher = MyApplication.getRefWatcher(getActivity());
+//        refWatcher.watch(this);
     }
 
 }

@@ -4,9 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="160px"
     android:background="#FFFFFF"
-    android:fitsSystemWindows="true"
     android:orientation="horizontal">
-
+<!--
+    android:fitsSystemWindows="true"-->
 
     <ImageView
         android:id="@+id/button_backward"
