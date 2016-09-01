@@ -9,9 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-
 import com.kejiang.yuandl.R;
-import com.orhanobut.logger.Logger;
 
 import java.math.BigDecimal;
 
